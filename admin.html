@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoLanggan — Admin Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root {
+  --green: #079b78;
+  --dark: #06785e;
+  --bg: #f4f8f7;
+  --text: #18352e;
+  --muted: #71817c;
+  --border: #e5eeea;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  background: rgba(255,255,255,.96);
+  padding: 18px 6%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 3px 18px rgba(0,0,0,.04);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--green);
+  letter-spacing: -.7px;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 18px;
+  background: var(--green);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: .2s;
+}
+
+button:hover {
+  background: var(--dark);
+  transform: translateY(-1px);
+}
+
+button.secondary {
+  background: #e7f2ef;
+  color: var(--green);
+}
+
+button.danger {
+  background: #d94a4a;
+}
+
+main {
+  max-width: 1180px;
+  margin: 35px auto;
+  padding: 0 20px;
+}
+
+h1 {
+  font-size: 29px;
+  margin-bottom: 7px;
+  letter-spacing: -.6px;
+}
+
+h2, h3 {
+  letter-spacing: -.3px;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  padding: 25px;
+  margin: 22px 0;
+  box-shadow: 0 5px 22px rgba(0,70,45,.045);
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #dce7e3;
+  border-radius: 10px;
+  margin: 8px 0 16px;
+  font: inherit;
+  background: white;
+  color: var(--text);
+  outline: none;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(7,155,120,.10);
+}
+
+label {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+}
+
+th, td {
+  text-align: left;
+  padding: 15px;
+  border-bottom: 1px solid #edf1ef;
+  font-size: 14px;
+  vertical-align: top;
+}
+
+th {
+  background: #f1f8f5;
+  color: #527067;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+tbody tr:hover {
+  background: #f9fcfa;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#message {
+  padding: 13px;
+  border-radius: 10px;
+  margin: 14px 0;
+  background: #e7f2ef;
+  color: var(--dark);
+}
+
+#message.error {
+  background: #fff0f0;
+  color: #b32626;
+}
+
+#loginPanel {
+  max-width: 430px;
+  margin: 75px auto;
+}
+
+.plan-row {
+  border: 1px solid var(--border);
+  padding: 17px;
+  border-radius: 12px;
+  margin: 13px 0;
+  background: #fcfefd;
+}
+
+.order-detail {
+  background: #f3f9f6;
+  padding: 13px;
+  border-radius: 10px;
+  margin-top: 9px;
+  line-height: 1.8;
+}
+
+.status-select {
+  min-width: 145px;
+  margin: 0;
+}
+
+.small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.order-count {
+  display: inline-block;
+  padding: 7px 13px;
+  background: #e7f2ef;
+  color: var(--dark);
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* KARTU STATISTIK */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 22px 0;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid #e5eeea;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 5px 22px rgba(0,70,45,.045);
+}
+
+.stat-card p {
+  color: #71817c;
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.stat-card h2 {
+  color: #079b78;
+  font-size: 30px;
+  margin: 0 0 8px;
+}
+
+.stat-card small {
+  color: #87948e;
+  font-size: 12px;
+}
+
+@media(max-width:800px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media(max-width:650px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  header {
+    padding: 15px 4%;
+  }
+
+  main {
+    margin: 20px auto;
+    padding: 0 13px;
+  }
+
+  .panel {
+    padding: 17px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+}
+
+@media(max-width:450px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">GoLanggan <span class="muted">ADMIN</span></div>
+  <button id="logoutBtn" class="secondary hidden" onclick="logout()">Keluar</button>
+</header>
+
+<main>
+
+  <!-- LOGIN -->
+  <section id="loginPanel" class="panel">
+    <h2>Login Admin</h2>
+    <p class="muted">Masuk untuk mengelola toko GoLanggan.</p>
+
+    <label>Email</label>
+    <input id="email" type="email" placeholder="Email admin">
+
+    <label>Password</label>
+    <input id="password" type="password" placeholder="Password">
+
+    <button style="width:100%" onclick="login()">Masuk Dashboard</button>
+
+    <div id="loginMessage"></div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="dashboard" class="hidden">
+
+    <h1>Dashboard GoLanggan</h1>
+    <p class="muted">Kelola produk, harga, dan pesanan toko kamu.</p>
+
+    <div id="message" class="hidden"></div>
+
+    <!-- STATISTIK -->
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <p>Total Pesanan</p>
+        <h2 id="statTotal">0</h2>
+        <small>Semua pesanan pelanggan</small>
+      </div>
+
+      <div class="stat-card">
+        <p>Menunggu</p>
+        <h2 id="statWaiting">0</h2>
+        <small>Pesanan baru</small>
+      </div>
+
+      <div class="stat-card">
+        <p>Diproses</p>
+        <h2 id="statProcessing">0</h2>
+        <small>Sedang dikerjakan</small>
+      </div>
+
+      <div class="stat-card">
+        <p>Selesai</p>
+        <h2 id="statCompleted">0</h2>
+        <small>Pesanan selesai</small>
+      </div>
+
+    </div>
+
+    <!-- MANAJEMEN PESANAN -->
+    <div class="panel">
+
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <div>
+          <h2>Manajemen Pesanan</h2>
+          <p class="muted">Pantau pesanan dan kelola status transaksi pelanggan.</p>
+        </div>
+
+        <button onclick="loadOrders()">Muat Ulang Pesanan</button>
+      </div>
+
+      <p>
+        <span class="order-count" id="orderCount">0 Pesanan</span>
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Kode Pesanan</th>
+              <th>Detail Produk</th>
+              <th>Total</th>
+              <th>Metode Pembayaran</th>
+              <th>Status Pembayaran</th>
+              <th>Status Pesanan</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+
+          <tbody id="ordersTable">
+            <tr><td colspan="7">Memuat pesanan...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- TAMBAH / EDIT PRODUK -->
+    <div class="panel">
+
+      <h2 id="formTitle">Tambah Produk</h2>
+
+      <input type="hidden" id="productId">
+
+      <label>Nama Produk</label>
+      <input id="productName" placeholder="Contoh: Netflix">
+
+      <div class="grid">
+        <div>
+          <label>Kategori</label>
+          <input id="productCategory" placeholder="Contoh: Streaming">
+        </div>
+
+        <div>
+          <label>Status Produk</label>
+          <select id="productStatus">
+            <option value="active">Aktif</option>
+            <option value="inactive">Nonaktif</option>
+            <option value="preorder">Pre-order</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Deskripsi</label>
+      <textarea id="productDescription" rows="3" placeholder="Deskripsi produk"></textarea>
+
+      <label>URL Gambar (opsional)</label>
+      <input id="productImage" placeholder="https://...">
+
+      <h3>Paket dan Harga</h3>
+
+      <div id="plansContainer"></div>
+
+      <button type="button" class="secondary" onclick="addPlanRow()">+ Tambah Paket</button>
+
+      <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="saveProduct()">Simpan Produk</button>
+        <button class="secondary" onclick="resetForm()">Batal / Reset</button>
+      </div>
+
+    </div>
+
+    <!-- DAFTAR PRODUK -->
+    <div class="panel">
+
+      <h2>Daftar Produk</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Produk</th>
+              <th>Kategori</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+
+          <tbody id="productTable">
+            <tr><td colspan="4">Memuat produk...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </section>
+</main>
+
+<script>
+const SUPABASE_URL = "https://zrmmscsjtavvcrbtaqxi.supabase.co";
+const SUPABASE_KEY = "sb_publishable_cdIeNF4EnfNbFK1TzbTLbQ_o-kpc0yS";
+
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+let currentUser = null;
+
+
+// PESAN DASHBOARD
+function showMessage(message,error=false){
+  const box = document.getElementById("message");
+
+  box.textContent = message;
+  box.classList.remove("hidden","error");
+
+  if(error){
+    box.classList.add("error");
+  }
+}
+
+
+// AMANKAN TEKS
+function escapeAttr(value){
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/"/g,"&quot;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+}
+
+
+// FORMAT RUPIAH
+function formatRupiah(value){
+  return new Intl.NumberFormat("id-ID",{
+    style:"currency",
+    currency:"IDR",
+    maximumFractionDigits:0
+  }).format(Number(value)||0);
+}
+
+
+// LOGIN ADMIN
+async function login(){
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const msg = document.getElementById("loginMessage");
+
+  msg.textContent = "Memeriksa akun...";
+
+  const {data,error} = await db.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error){
+    msg.textContent = "Login gagal: " + error.message;
+    return;
+  }
+
+  await checkAdmin(data.user);
+}
+
+
+// PERIKSA ROLE ADMIN
+async function checkAdmin(user){
+
+  const {data,error} = await db
+    .from("profiles")
+    .select("role")
+    .eq("id",user.id)
+    .single();
+
+  if(error || !data || data.role !== "admin"){
+
+    await db.auth.signOut();
+
+    document.getElementById("loginMessage").textContent =
+      "Akun ini tidak memiliki akses admin.";
+
+    return;
+  }
+
+  currentUser = user;
+
+  document.getElementById("loginPanel").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+  document.getElementById("logoutBtn").classList.remove("hidden");
+
+  resetForm();
+
+  await Promise.all([
+    loadProducts(),
+    loadOrders()
+  ]);
+}
+
+
+// LOGOUT
+async function logout(){
+  await db.auth.signOut();
+  location.reload();
+}
+
+
+// TAMBAH BARIS PAKET
+function addPlanRow(plan={}){
+
+  const container = document.getElementById("plansContainer");
+
+  const row = document.createElement("div");
+  row.className = "plan-row";
+
+  row.innerHTML = `
+    <label>Nama Paket</label>
+    <input
+      class="plan-name"
+      placeholder="Contoh: 1 Bulan Private"
+      value="${escapeAttr(plan.name||"")}"
+    >
+
+    <div class="grid">
+
+      <div>
+        <label>Harga (Rupiah)</label>
+        <input
+          class="plan-price"
+          type="number"
+          min="0"
+          placeholder="Contoh: 35000"
+          value="${plan.price??""}"
+        >
+      </div>
+
+      <div>
+        <label>Durasi (bulan)</label>
+        <input
+          class="plan-duration"
+          type="number"
+          min="0"
+          value="${plan.duration_months??1}"
+        >
+      </div>
+
+      <div>
+        <label>Jenis Paket</label>
+        <input
+          class="plan-type"
+          placeholder="Private / Sharing"
+          value="${escapeAttr(plan.package_type||"")}"
+        >
+      </div>
+
+      <div>
+        <label>Stok</label>
+        <input
+          class="plan-stock"
+          type="number"
+          min="0"
+          value="${plan.stock??10}"
+        >
+      </div>
+
+    </div>
+
+    <label>Status Paket</label>
+
+    <select class="plan-status">
+      <option value="active" ${plan.status==="active"||!plan.status?"selected":""}>Aktif</option>
+      <option value="inactive" ${plan.status==="inactive"?"selected":""}>Nonaktif</option>
+      <option value="sold_out" ${plan.status==="sold_out"?"selected":""}>Habis</option>
+    </select>
+
+    <button
+      type="button"
+      class="danger"
+      onclick="this.parentElement.remove()"
+    >Hapus Paket</button>
+  `;
+
+  container.appendChild(row);
+}
+
+
+// MEMUAT PRODUK
+async function loadProducts(){
+
+  const table = document.getElementById("productTable");
+
+  table.innerHTML = "<tr><td colspan='4'>Memuat...</td></tr>";
+
+  const {data,error} = await db
+    .from("products")
+    .select("*")
+    .order("created_at",{ascending:false});
+
+  if(error){
+
+    table.innerHTML =
+      "<tr><td colspan='4'>Gagal memuat: " +
+      escapeAttr(error.message) +
+      "</td></tr>";
+
+    return;
+  }
+
+  if(!data || !data.length){
+
+    table.innerHTML =
+      "<tr><td colspan='4'>Belum ada produk.</td></tr>";
+
+    return;
+  }
+
+  table.innerHTML = "";
+
+  data.forEach(product=>{
+
+    const tr = document.createElement("tr");
+
+    const name = document.createElement("td");
+    name.textContent = product.name;
+
+    const category = document.createElement("td");
+    category.textContent = product.category || "-";
+
+    const status = document.createElement("td");
+    status.textContent = product.status;
+
+    const actions = document.createElement("td");
+    actions.className = "actions";
+
+    const edit = document.createElement("button");
+    edit.textContent = "Edit";
+    edit.className = "secondary";
+    edit.onclick = () => editProduct(product.id);
+
+    const del = document.createElement("button");
+    del.textContent = "Hapus";
+    del.className = "danger";
+    del.onclick = () => deleteProduct(product.id);
+
+    actions.append(edit,del);
+
+    tr.append(name,category,status,actions);
+
+    table.appendChild(tr);
+  });
+}
+
+
+// SIMPAN PRODUK
+async function saveProduct(){
+
+  const id = document.getElementById("productId").value;
+  const name = document.getElementById("productName").value.trim();
+  const category = document.getElementById("productCategory").value.trim();
+  const description = document.getElementById("productDescription").value.trim();
+  const image_url = document.getElementById("productImage").value.trim();
+  const status = document.getElementById("productStatus").value;
+
+  if(!name){
+    showMessage("Nama produk wajib diisi.",true);
+    return;
+  }
+
+  const product = {
+    name,
+    category,
+    description,
+    image_url,
+    status,
+    updated_at:new Date().toISOString()
+  };
+
+  let productId = id;
+
+  if(id){
+
+    const {error} = await db
+      .from("products")
+      .update(product)
+      .eq("id",id);
+
+    if(error){
+      showMessage("Gagal mengubah produk: " + error.message,true);
+      return;
+    }
+
+  }else{
+
+    const {data,error} = await db
+      .from("products")
+      .insert(product)
+      .select("id")
+      .single();
+
+    if(error){
+      showMessage("Gagal menambah produk: " + error.message,true);
+      return;
+    }
+
+    productId = data.id;
+  }
+
+  const rows = [...document.querySelectorAll(".plan-row")];
+
+  const plans = rows.map(row=>({
+
+    product_id:productId,
+
+    name:row.querySelector(".plan-name").value.trim(),
+
+    price:Number(row.querySelector(".plan-price").value),
+
+    duration_months:
+      Number(row.querySelector(".plan-duration").value)||1,
+
+    package_type:
+      row.querySelector(".plan-type").value.trim(),
+
+    stock:
+      Number(row.querySelector(".plan-stock").value)||0,
+
+    status:
+      row.querySelector(".plan-status").value
+
+  })).filter(p=>
+    p.name &&
+    Number.isFinite(p.price) &&
+    p.price >= 0
+  );
+
+  if(id){
+
+    const {error} = await db
+      .from("product_plans")
+      .delete()
+      .eq("product_id",productId);
+
+    if(error){
+      showMessage(
+        "Produk tersimpan, tetapi paket lama gagal diperbarui: " + error.message,
+        true
+      );
+      return;
+    }
+  }
+
+  if(plans.length){
+
+    const {error} = await db
+      .from("product_plans")
+      .insert(plans);
+
+    if(error){
+      showMessage(
+        "Produk tersimpan, tetapi paket gagal disimpan: " + error.message,
+        true
+      );
+      return;
+    }
+  }
+
+  showMessage("Produk dan paket berhasil disimpan!");
+
+  resetForm();
+
+  await loadProducts();
+}
+
+
+// EDIT PRODUK
+async function editProduct(id){
+
+  const {data:product,error} = await db
+    .from("products")
+    .select("*")
+    .eq("id",id)
+    .single();
+
+  if(error){
+    showMessage(error.message,true);
+    return;
+  }
+
+  const {data:plans,error:planError} = await db
+    .from("product_plans")
+    .select("*")
+    .eq("product_id",id);
+
+  if(planError){
+    showMessage(planError.message,true);
+    return;
+  }
+
+  document.getElementById("productId").value = product.id;
+  document.getElementById("productName").value = product.name || "";
+  document.getElementById("productCategory").value = product.category || "";
+  document.getElementById("productDescription").value = product.description || "";
+  document.getElementById("productImage").value = product.image_url || "";
+  document.getElementById("productStatus").value = product.status || "active";
+
+  document.getElementById("formTitle").textContent = "Edit Produk";
+
+  document.getElementById("plansContainer").innerHTML = "";
+
+  (plans||[]).forEach(plan=>addPlanRow(plan));
+
+  document.getElementById("formTitle").scrollIntoView({
+    behavior:"smooth"
+  });
+}
+
+
+// HAPUS PRODUK
+async function deleteProduct(id){
+
+  if(!confirm("Yakin ingin menghapus produk ini beserta paketnya?")){
+    return;
+  }
+
+  const {error} = await db
+    .from("product_plans")
+    .delete()
+    .eq("product_id",id);
+
+  if(error){
+    showMessage("Gagal menghapus paket: " + error.message,true);
+    return;
+  }
+
+  const {error:productError} = await db
+    .from("products")
+    .delete()
+    .eq("id",id);
+
+  if(productError){
+    showMessage("Gagal menghapus produk: " + productError.message,true);
+    return;
+  }
+
+  showMessage("Produk berhasil dihapus.");
+
+  await loadProducts();
+}
+
+
+// RESET FORM
+function resetForm(){
+
+  document.getElementById("productId").value = "";
+  document.getElementById("productName").value = "";
+  document.getElementById("productCategory").value = "";
+  document.getElementById("productDescription").value = "";
+  document.getElementById("productImage").value = "";
+  document.getElementById("productStatus").value = "active";
+
+  document.getElementById("plansContainer").innerHTML = "";
+
+  document.getElementById("formTitle").textContent = "Tambah Produk";
+
+  addPlanRow();
+}
+
+
+// MANAJEMEN PESANAN
+async function loadOrders(){
+
+  const table = document.getElementById("ordersTable");
+  const count = document.getElementById("orderCount");
+
+  table.innerHTML = "<tr><td colspan='7'>Memuat pesanan...</td></tr>";
+
+  const {data:orders,error} = await db
+    .from("orders")
+    .select("id,user_id,order_code,total_amount,payment_method,payment_status,order_status,created_at")
+    .order("created_at",{ascending:false});
+
+  if(error){
+
+    table.innerHTML =
+      "<tr><td colspan='7'>Gagal memuat pesanan: " +
+      escapeAttr(error.message) +
+      "</td></tr>";
+
+    showMessage("Gagal memuat pesanan: " + error.message,true);
+
+    return;
+  }
+
+  const safeOrders = orders || [];
+
+  // UPDATE STATISTIK
+  document.getElementById("statTotal").textContent =
+    safeOrders.length;
+
+  document.getElementById("statWaiting").textContent =
+    safeOrders.filter(order =>
+      order.order_status === "waiting"
+    ).length;
+
+  document.getElementById("statProcessing").textContent =
+    safeOrders.filter(order =>
+      order.order_status === "processing"
+    ).length;
+
+  document.getElementById("statCompleted").textContent =
+    safeOrders.filter(order =>
+      order.order_status === "completed"
+    ).length;
+
+  count.textContent = safeOrders.length + " Pesanan";
+
+  if(!safeOrders.length){
+
+    table.innerHTML =
+      "<tr><td colspan='7'>Belum ada pesanan pelanggan.</td></tr>";
+
+    return;
+  }
+
+  const orderIds = safeOrders.map(order=>order.id);
+
+  const {data:items,error:itemError} = await db
+    .from("order_items")
+    .select("id,order_id,product_name,plan_name,quantity,unit_price")
+    .in("order_id",orderIds);
+
+  if(itemError){
+
+    table.innerHTML =
+      "<tr><td colspan='7'>Gagal memuat detail pesanan: " +
+      escapeAttr(itemError.message) +
+      "</td></tr>";
+
+    showMessage("Gagal memuat detail pesanan: " + itemError.message,true);
+
+    return;
+  }
+
+  table.innerHTML = "";
+
+  safeOrders.forEach(order=>{
+
+    const orderItems = (items||[]).filter(item=>
+      item.order_id === order.id
+    );
+
+    const detail = orderItems.map(item=>
+      `${item.product_name} — ${item.plan_name} (${item.quantity} × ${formatRupiah(item.unit_price)})`
+    ).join("\n");
+
+    const tr = document.createElement("tr");
+
+    const code = document.createElement("td");
+    code.textContent = order.order_code || order.id;
+
+    const product = document.createElement("td");
+    product.textContent = detail || "Tidak ada detail produk";
+
+    const total = document.createElement("td");
+    total.textContent = formatRupiah(order.total_amount);
+
+    const method = document.createElement("td");
+    method.textContent = order.payment_method || "-";
+
+    const payment = document.createElement("td");
+    payment.textContent = order.payment_status || "-";
+
+    const statusCell = document.createElement("td");
+
+    const statusSelect = document.createElement("select");
+    statusSelect.className = "status-select";
+    statusSelect.dataset.orderId = order.id;
+
+    const statusOptions = [
+      ["waiting","Menunggu"],
+      ["processing","Diproses"],
+      ["completed","Selesai"],
+      ["cancelled","Dibatalkan"]
+    ];
+
+    statusOptions.forEach(([value,label])=>{
+
+      const option = document.createElement("option");
+
+      option.value = value;
+      option.textContent = label;
+
+      if(order.order_status === value){
+        option.selected = true;
+      }
+
+      statusSelect.appendChild(option);
+    });
+
+    statusCell.appendChild(statusSelect);
+
+    const action = document.createElement("td");
+
+    const saveButton = document.createElement("button");
+
+    saveButton.textContent = "Simpan";
+
+    saveButton.onclick = ()=>
+      updateOrderStatus(order.id,statusSelect.value);
+
+    action.appendChild(saveButton);
+
+    tr.append(
+      code,
+      product,
+      total,
+      method,
+      payment,
+      statusCell,
+      action
+    );
+
+    table.appendChild(tr);
+  });
+}
+
+
+// PERBARUI STATUS PESANAN
+async function updateOrderStatus(orderId, newStatus) {
+  const allowed = ["waiting", "processing", "completed", "cancelled"];
+
+  if (!allowed.includes(newStatus)) {
+    showMessage("Status pesanan tidak valid.", true);
+    return;
+  }
+
+  const { data, error } = await db
+    .from("orders")
+    .update({ order_status: newStatus })
+    .eq("id", orderId)
+    .select("id, order_status")
+    .maybeSingle();
+
+  if (error) {
+    showMessage("Gagal menyimpan: " + error.message, true);
+    return;
+  }
+
+  if (!data) {
+    showMessage(
+      "Tidak ada pesanan yang berhasil diperbarui. Periksa izin UPDATE di Supabase.",
+      true
+    );
+    return;
+  }
+
+  showMessage("Status berhasil disimpan: " + data.order_status);
+  await loadOrders();
+}
+
+// PULIHKAN SESI LOGIN
+async function restoreSession(){
+
+  const {data,error} = await db.auth.getSession();
+
+  if(error){
+
+    document.getElementById("loginMessage").textContent =
+      error.message;
+
+    return;
+  }
+
+  if(data.session){
+
+    await checkAdmin(data.session.user);
+
+  }else{
+
+    resetForm();
+  }
+}
+
+
+// JALANKAN SAAT HALAMAN DIBUKA
+restoreSession();
+
+</script>
+</body>
+</html>

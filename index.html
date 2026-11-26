@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoLanggan — Satu Pintu untuk Semua Aplikasi Favoritmu</title>
+<meta name="description" content="GoLanggan menyediakan layanan langganan aplikasi dan produk digital dalam satu tempat.">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root {
+  --primary:#079b78;
+  --primary-dark:#06785e;
+  --bg:#f5f8f7;
+  --white:#fff;
+  --text:#172b25;
+  --muted:#718078;
+  --border:#e2ebe6;
+  --danger:#d84c4c;
+  --shadow:0 8px 28px rgba(20,60,45,.07);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.container{width:min(1120px,92%);margin:auto}
+header{background:white;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.nav{min-height:72px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.logo{color:var(--primary);font-size:25px;font-weight:800;text-decoration:none}
+.nav-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{border:0;border-radius:10px;padding:12px 17px;font-weight:700}
+.btn-primary{background:var(--primary);color:white}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-light{background:#eaf6f1;color:var(--primary-dark)}
+.btn-danger{background:#fff0f0;color:var(--danger)}
+.hero{padding:65px 0;background:linear-gradient(120deg,#e6f7f0,#f8fcfa)}
+.hero h1{max-width:700px;font-size:clamp(32px,5vw,52px);line-height:1.12;margin:0 0 18px}
+.hero h1 span{color:var(--primary)}
+.hero p{color:var(--muted);line-height:1.7;max-width:600px}
+.hero .btn{margin-top:15px}
+.section{padding:48px 0}
+.section-heading{margin-bottom:22px}
+.section-heading h2{margin:0 0 8px;font-size:27px}
+.section-heading p{color:var(--muted);margin:0}
+.toolbar{display:grid;grid-template-columns:1fr 210px;gap:12px;margin-bottom:22px}
+.field{width:100%;padding:13px;border:1px solid var(--border);border-radius:10px;background:white;outline:none}
+.field:focus{border-color:var(--primary)}
+.product-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.product{background:white;border:1px solid var(--border);border-radius:15px;padding:19px;box-shadow:var(--shadow)}
+.product-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:17px}
+.product-logo{width:48px;height:48px;display:grid;place-items:center;border-radius:13px;background:#eaf6f1;font-size:24px;overflow:hidden}
+.product-logo img{width:100%;height:100%;object-fit:contain}
+.pill{font-size:11px;padding:6px 9px;border-radius:20px;background:#e8f7ef;color:#078052}
+.product h3{margin:0 0 8px}
+.product-category{color:var(--muted);font-size:13px}
+.product-price{margin:18px 0;font-size:19px;font-weight:800;color:var(--primary-dark)}
+.product-price small{font-size:11px;color:var(--muted);font-weight:400}
+.product .btn{width:100%}
+.empty{padding:30px;text-align:center;background:white;border-radius:12px;color:var(--muted);grid-column:1/-1}
+.notice{padding:14px;border-radius:10px;background:#fff7e7;color:#805c1c;line-height:1.5;margin-bottom:15px}
+footer{padding:35px 0;background:#123c30;color:white;margin-top:35px}
+footer p{color:#c3d9cf;line-height:1.6}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:30;padding:18px;overflow-y:auto}
+.modal.show{display:flex;align-items:center;justify-content:center}
+.modal-box{background:white;width:min(480px,100%);padding:23px;border-radius:16px;max-height:90vh;overflow-y:auto}
+.modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
+.modal-head h3{margin:0}
+.close{border:0;background:#f0f3f1;border-radius:8px;padding:8px 12px}
+.plan-list{display:grid;gap:10px;margin:12px 0 20px}
+.plan-option{display:flex;gap:12px;padding:14px;border:1px solid var(--border);border-radius:11px;cursor:pointer}
+.plan-option:has(input:checked){border-color:var(--primary);background:#f0faf5}
+.plan-option input{accent-color:var(--primary)}
+.plan-option strong{display:block;margin-bottom:5px}
+.plan-price{color:var(--primary-dark);font-weight:800}
+.cart-line{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border);padding:13px 0;line-height:1.6}
+.cart-line button{border:0;background:#fff0f0;color:var(--danger);border-radius:8px;padding:7px 10px;height:fit-content}
+.cart-total{display:flex;justify-content:space-between;font-size:20px;font-weight:800;margin:20px 0}
+.small-note{color:var(--muted);font-size:12px;line-height:1.6}
+#toast{display:none;position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#183b30;color:white;padding:13px 20px;border-radius:10px;z-index:50;max-width:90%;text-align:center}
+.auth-tabs{display:flex;gap:8px;margin-bottom:18px}
+.auth-tabs button{flex:1}
+.auth-form{display:grid;gap:12px}
+.auth-form label{font-size:13px;font-weight:700}
+.auth-form .field{margin-top:6px}
+.user-label{font-size:12px;color:var(--muted);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+hr{border:0;border-top:1px solid var(--border);margin:18px 0}
+
+@media(max-width:760px){
+ .product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .toolbar{grid-template-columns:1fr}
+ .hero{padding:45px 0}
+}
+@media(max-width:480px){
+ .product-grid{grid-template-columns:1fr}
+ .logo{font-size:21px}
+ .nav .btn{padding:10px}
+ .nav-actions{gap:6px}
+}
+
+/* RIWAYAT PESANAN */
+
+.history-card {
+  background: #ffffff;
+  border: 1px solid #e5eee9;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 5px 18px rgba(0, 80, 55, 0.06);
+}
+
+.history-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.history-card-top small,
+.history-card-bottom small {
+  display: block;
+  color: #82918a;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  margin-bottom: 5px;
+}
+
+.history-card-top h3 {
+  color: #08785e;
+  font-size: 16px;
+  margin: 0;
+}
+
+.history-status {
+  background: #e8f7f0;
+  color: #07845f;
+  padding: 7px 12px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.history-date {
+  color: #87948e;
+  font-size: 12px;
+  margin: 12px 0 16px;
+}
+
+.history-products {
+  border-top: 1px solid #edf1ee;
+  border-bottom: 1px solid #edf1ee;
+  padding: 14px 0;
+}
+
+.history-product {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.history-product:last-child {
+  margin-bottom: 0;
+}
+
+.history-product strong {
+  color: #263b32;
+  font-size: 14px;
+}
+
+.history-product p {
+  color: #87948e;
+  font-size: 12px;
+  margin: 5px 0 0;
+}
+
+.history-product span {
+  color: #263b32;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.history-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.history-card-bottom strong {
+  color: #263b32;
+  font-size: 13px;
+}
+
+.history-total {
+  text-align: right;
+}
+
+.history-total strong {
+  color: #079b78;
+  font-size: 17px;
+}
+
+@media (max-width: 480px) {
+  .history-card {
+    padding: 15px;
+  }
+
+  .history-card-bottom {
+    align-items: flex-start;
+  }
+
+  .history-product {
+    align-items: flex-start;
+  }
+}
+
+.history-detail {
+  margin-top: 16px;
+  border-top: 1px solid #e5eeeb;
+  padding-top: 12px;
+}
+
+.history-detail summary {
+  color: #079b78;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.history-detail summary:hover {
+  color: #06785e;
+}
+
+.history-detail .history-products {
+  margin-top: 12px;
+}
+
+.history-detail .history-card-bottom {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e5eeeb;
+}
+</style>
+
+<link rel="icon" href="data:,">
+</head>
+
+<body>
+
+<header>
+  <div class="container nav">
+    <a href="#" class="logo">GoLanggan.</a>
+
+    <div class="nav-actions">
+      <span id="userLabel" class="user-label"></span>
+
+      <button class="btn btn-light" id="authButton" onclick="openAuthModal()">
+        Login / Daftar
+      </button>
+
+      <button class="btn btn-light" onclick="openOrderHistory()">
+        Riwayat Pesanan
+      </button>
+
+      <button class="btn btn-light" onclick="openCart()">
+        Keranjang (<span id="cartCount">0</span>)
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="container">
+      <h1>Satu Pintu untuk Semua <span>Aplikasi Favoritmu.</span></h1>
+      <p>Temukan berbagai layanan langganan aplikasi dan produk digital dengan proses pemesanan yang mudah di GoLanggan.</p>
+      <button class="btn btn-primary" onclick="scrollToCatalog()">Jelajahi Produk</button>
+    </div>
+  </section>
+
+  <section class="section" id="catalog">
+    <div class="container">
+      <div class="section-heading">
+        <h2>Jelajahi Produk</h2>
+        <p>Pilih aplikasi dan paket yang sesuai kebutuhanmu.</p>
+      </div>
+
+      <div class="toolbar">
+        <input class="field" id="searchInput" placeholder="Cari nama produk..." oninput="renderProducts()">
+
+        <select class="field" id="categoryFilter" onchange="renderProducts()">
+          <option value="all">Semua kategori</option>
+          <option value="entertainment">Hiburan</option>
+          <option value="productivity">Produktivitas</option>
+          <option value="education">Pendidikan</option>
+          <option value="cloud">Cloud & Keamanan</option>
+          <option value="game">Game</option>
+          <option value="other">Lainnya</option>
+        </select>
+      </div>
+
+      <div id="productGrid" class="product-grid">
+        <div class="empty">Memuat produk...</div>
+      </div>
+
+      <p class="small-note">Jika terjadi kesalahan dalam pelayanan, tim GoLanggan akan membantu memeriksa pesanan dan memberikan solusi sesuai ketentuan layanan.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <strong>GoLanggan.</strong>
+    <p>Satu Pintu untuk Semua Aplikasi Favoritmu.</p>
+    <p class="small-note">Informasi harga dan ketersediaan mengikuti data paket aktif.</p>
+  </div>
+</footer>
+
+<!-- MODAL PRODUK -->
+<div class="modal" id="productModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modalProductName">Pilih Paket</h3>
+      <button class="close" onclick="closeModal('productModal')">✕</button>
+    </div>
+    <div id="productModalContent"></div>
+  </div>
+</div>
+
+<!-- MODAL KERANJANG -->
+<div class="modal" id="cartModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Keranjang Belanja</h3>
+      <button class="close" onclick="closeModal('cartModal')">✕</button>
+    </div>
+
+    <div id="cartItems"></div>
+
+    <div class="cart-total">
+      <span>Total</span>
+      <span id="cartTotal">Rp 0</span>
+    </div>
+
+    <button class="btn btn-primary" id="checkoutButton" style="width:100%" onclick="checkoutNotice()">
+      Lanjutkan Pesanan
+    </button>
+
+    <p class="small-note">Kamu akan diarahkan ke halaman pembayaran Midtrans setelah pesanan berhasil dibuat.</p>
+  </div>
+</div>
+
+<!-- MODAL RIWAYAT PESANAN -->
+<div class="modal" id="orderHistoryModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Riwayat Pesanan</h3>
+      <button class="close" onclick="closeModal('orderHistoryModal')">✕</button>
+    </div>
+
+    <div id="orderHistoryContent">
+      <p>Memuat riwayat pesanan...</p>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LOGIN DAN DAFTAR -->
+<div class="modal" id="authModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Akun GoLanggan</h3>
+      <button class="close" onclick="closeModal('authModal')">✕</button>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="btn btn-primary" id="loginTab" onclick="setAuthMode('login')">Login</button>
+      <button class="btn btn-light" id="registerTab" onclick="setAuthMode('register')">Daftar</button>
+    </div>
+
+    <form class="auth-form" id="authForm" onsubmit="submitAuth(event)">
+      <div id="nameField" style="display:none">
+        <label>Nama lengkap
+          <input class="field" id="fullName" type="text" autocomplete="name" placeholder="Nama lengkap kamu">
+        </label>
+      </div>
+
+      <div>
+        <label>Email
+          <input class="field" id="authEmail" type="email" autocomplete="email" required placeholder="nama@email.com">
+        </label>
+      </div>
+
+      <div>
+        <label>Password
+          <input class="field" id="authPassword" type="password" minlength="6" autocomplete="current-password" required placeholder="Minimal 6 karakter">
+        </label>
+      </div>
+
+      <button class="btn btn-primary" id="authSubmit" type="submit">Login</button>
+      <p class="small-note" id="authMessage">Login untuk melanjutkan pesanan.</p>
+    </form>
+
+    <hr>
+
+    <button class="btn btn-light" id="logoutButton" style="display:none;width:100%" onclick="logoutCustomer()">Logout</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* KONFIGURASI SUPABASE */
+const SUPABASE_URL = "https://zrmmscsjtavvcrbtaqxi.supabase.co";
+const SUPABASE_KEY = "sb_publishable_cdIeNF4EnfNbFK1TzbTLbQ_o-kpc0yS";
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+/* DATA */
+let products = [];
+let cart = [];
+let selectedProduct = null;
+let toastTimer = null;
+let authMode = "login";
+let currentUser = null;
+
+const categoryNames = {
+  entertainment:"Hiburan",
+  productivity:"Produktivitas",
+  education:"Pendidikan",
+  cloud:"Cloud & Keamanan",
+  game:"Game",
+  other:"Lainnya"
+};
+
+function rupiah(value) {
+  return "Rp " + Number(value || 0).toLocaleString("id-ID");
+}
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.style.display = "block";
+
+  clearTimeout(toastTimer);
+
+  toastTimer = setTimeout(() => {
+    toast.style.display = "none";
+  }, 3500);
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add("show");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("show");
+}
+
+function scrollToCatalog() {
+  document.getElementById("catalog").scrollIntoView({behavior:"smooth"});
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  }[char]));
+}
+
+/* PRODUK DARI SUPABASE */
+async function loadProductsFromSupabase() {
+  const grid = document.getElementById("productGrid");
+
+  grid.innerHTML = '<div class="empty">Memuat produk...</div>';
+
+  try {
+    // 1. Ambil seluruh produk aktif
+    const { data: productData, error: productError } =
+      await supabaseClient
+        .from("products")
+        .select(`
+          id,
+          name,
+          category,
+          description,
+          image_url,
+          status
+        `)
+        .eq("status", "active")
+        .order("name");
+
+    if (productError) throw productError;
+
+    if (!productData || productData.length === 0) {
+      products = [];
+      renderProducts();
+      return;
+    }
+
+    // 2. Ambil paket aktif
+    const { data: planData, error: planError } =
+      await supabaseClient
+        .from("product_plans")
+        .select(`
+          id,
+          product_id,
+          name,
+          price,
+          duration_months,
+          package_type,
+          stock,
+          status
+        `)
+        .eq("status", "active");
+
+    if (planError) throw planError;
+
+    // 3. Gabungkan produk dengan paket berdasarkan product_id
+    products = productData.map(product => {
+      const relatedPlans = (planData || [])
+        .filter(plan => plan.product_id === product.id)
+        .map(plan => ({
+          id: plan.id,
+          name: plan.name,
+          price: Number(plan.price),
+          billing: plan.duration_months
+            ? `${plan.duration_months} bulan`
+            : "Sekali bayar",
+          packageType: plan.package_type || "",
+          stock: plan.stock
+        }));
+
+      return {
+        id: product.id,
+        name: product.name,
+        category: product.category || "other",
+        description: product.description || "",
+        image_url: product.image_url || "",
+        plans: relatedPlans
+      };
+    });
+
+    console.log("Produk berhasil dimuat:", products.length);
+    console.log(
+      "Produk dengan paket:",
+      products.filter(product => product.plans.length > 0).length
+    );
+
+    renderProducts();
+
+  } catch (error) {
+    console.error("Gagal mengambil produk:", error);
+
+    grid.innerHTML = `
+      <div class="empty">
+        Produk gagal dimuat. Silakan periksa koneksi database.
+      </div>
+    `;
+  }
+}
+
+
+/* TAMPILKAN PRODUK */
+function renderProducts() {
+  const grid = document.getElementById("productGrid");
+  const searchInput = document.getElementById("searchInput");
+  const categoryFilter = document.getElementById("categoryFilter");
+
+  const query = (searchInput?.value || "").toLowerCase().trim();
+  const category = categoryFilter?.value || "all";
+
+  const filtered = products.filter(product => {
+    const name = (product.name || "").toLowerCase();
+
+    return name.includes(query) &&
+      (category === "all" || product.category === category);
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = `
+      <div class="empty">
+        Belum ada produk yang cocok.
+      </div>
+    `;
+    return;
+  }
+
+ grid.innerHTML = filtered.map(product => {
+    const index = products.indexOf(product);
+
+    const prices = product.plans
+      .map(plan => Number(plan.price))
+      .filter(price => Number.isFinite(price) && price >= 0);
+
+    const cheapest = prices.length
+      ? Math.min(...prices)
+      : null;
+
+    const isAvailable =
+      product.status === "active" &&
+      Array.isArray(product.plans) &&
+      product.plans.some(plan =>
+        plan.status === "active" &&
+        Number(plan.stock) > 0
+      );
+
+    const availabilityText = isAvailable ? "Tersedia" : "Habis";
+    const availabilityDisabled = !isAvailable;
+
+    // Lanjutkan kode template kartu produk yang sudah ada di sini.
+
+    const logo = product.image_url
+      ? `<img src="${escapeHTML(product.image_url)}" alt="">`
+      : "📦";
+
+    return `
+      <article class="product">
+        <div class="product-top">
+          <div class="product-logo">${logo}</div>
+
+          <span class="pill">
+            ${!isAvailable ? "Tersedia" : "Belum tersedia"}
+          </span>
+        </div>
+
+        <h3>${escapeHTML(product.name)}</h3>
+
+        <div class="product-category">
+          ${categoryNames[product.category] || "Lainnya"}
+        </div>
+
+        <div class="product-price">
+          ${
+            cheapest === null
+              ? "Harga belum tersedia"
+              : rupiah(cheapest)
+          }
+          <small>${cheapest === null ? "" : "/ mulai"}</small>
+        </div>
+
+        <button
+          class="btn btn-primary"
+          ${!isAvailable ? `onclick="openProduct(${index})"` : "disabled"}
+        >
+          ${!isAvailable ? "Lihat Paket" : "Belum tersedia"}
+        </button>
+      </article>
+    `;
+  }).join("");
+}
+
+/* DETAIL PRODUK */
+function openProduct(index) {
+  selectedProduct = products[index];
+
+  if(!selectedProduct) return;
+
+  const plans = selectedProduct.plans || [];
+
+  document.getElementById("modalProductName").textContent = selectedProduct.name;
+
+  if(!plans.length) {
+    document.getElementById("productModalContent").innerHTML =
+      '<div class="notice">Belum ada paket aktif untuk produk ini. Silakan hubungi admin.</div>';
+
+    openModal("productModal");
+    return;
+  }
+
+  document.getElementById("productModalContent").innerHTML = `
+    <p>${escapeHTML(selectedProduct.description)}</p>
+
+    <label><strong>Pilih paket</strong></label>
+
+    <div class="plan-list">
+      ${plans.map((plan,index) => `
+        <label class="plan-option">
+          <input type="radio" name="selectedPlan" value="${index}" ${index===0?"checked":""}>
+
+          <span>
+            <strong>${escapeHTML(plan.name)}</strong>
+            <span class="plan-price">${rupiah(plan.price)}</span><br>
+            <small>${escapeHTML(plan.billing)}${plan.packageType ? " • "+escapeHTML(plan.packageType) : ""}</small>
+          </span>
+        </label>
+      `).join("")}
+    </div>
+
+    <label for="quantitySelect"><strong>Jumlah</strong></label>
+
+    <input class="field" id="quantitySelect" type="number" min="1" max="10" value="1">
+
+    <button class="btn btn-primary" style="width:100%;margin-top:15px" onclick="addToCart()">Tambah ke Keranjang</button>
+  `;
+
+  openModal("productModal");
+}
+
+/* KERANJANG */
+function addToCart() {
+  if(!selectedProduct) {
+    showToast("Produk tidak ditemukan.");
+    return;
+  }
+
+  const selectedPlanIndex = document.querySelector('input[name="selectedPlan"]:checked')?.value;
+
+  if(selectedPlanIndex === undefined) {
+    showToast("Pilih paket terlebih dahulu.");
+    return;
+  }
+
+  const selectedPlan = selectedProduct.plans[Number(selectedPlanIndex)];
+
+  if(!selectedPlan) {
+    showToast("Paket tidak ditemukan.");
+    return;
+  }
+
+  const quantity = Number(document.getElementById("quantitySelect").value);
+
+  if(!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
+    showToast("Jumlah harus antara 1 sampai 10.");
+    return;
+  }
+
+  const existing = cart.find(item => item.planId === selectedPlan.id);
+
+  if(existing) {
+    if(existing.quantity + quantity > 10) {
+      showToast("Maksimal 10 paket yang sama.");
+      return;
+    }
+
+    existing.quantity += quantity;
+  } else {
+    cart.push({
+      productId:selectedProduct.id,
+      planId:selectedPlan.id,
+      name:selectedProduct.name,
+      planName:selectedPlan.name,
+      duration:selectedPlan.billing,
+      packageType:selectedPlan.packageType,
+      price:selectedPlan.price,
+      quantity
+    });
+  }
+
+  updateCartCount();
+  renderCart();
+  closeModal("productModal");
+
+  showToast("Produk berhasil ditambahkan ke keranjang.");
+}
+
+function updateCartCount() {
+  const count = cart.reduce((sum,item) => sum + item.quantity,0);
+  document.getElementById("cartCount").textContent = count;
+}
+
+function renderCart() {
+  const box = document.getElementById("cartItems");
+
+  if(!cart.length) {
+    box.innerHTML = '<div class="empty">Keranjang kamu masih kosong.</div>';
+  } else {
+    box.innerHTML = cart.map((item,index) => `
+      <div class="cart-line">
+        <div>
+          <strong>${escapeHTML(item.name)}</strong><br>
+          <span>${escapeHTML(item.planName)}</span><br>
+          <small>${escapeHTML(item.duration)}${item.packageType ? " • "+escapeHTML(item.packageType) : ""} • ${item.quantity} item</small><br>
+          <strong>${rupiah(item.price * item.quantity)}</strong>
+        </div>
+
+        <button onclick="removeCart(${index})">Hapus</button>
+      </div>
+    `).join("");
+  }
+
+  const total = cart.reduce((sum,item) => sum + item.price * item.quantity,0);
+
+  document.getElementById("cartTotal").textContent = rupiah(total);
+}
+
+function removeCart(index) {
+  cart.splice(index,1);
+  updateCartCount();
+  renderCart();
+}
+
+function openCart() {
+  renderCart();
+  openModal("cartModal");
+}
+
+/* LOGIN DAN DAFTAR */
+function setAuthMode(mode) {
+  authMode = mode;
+
+  const registering = mode === "register";
+
+  document.getElementById("nameField").style.display = registering ? "block" : "none";
+  document.getElementById("fullName").required = registering;
+
+  document.getElementById("authPassword").autocomplete =
+    registering ? "new-password" : "current-password";
+
+  document.getElementById("authSubmit").textContent =
+    registering ? "Daftar Sekarang" : "Login";
+
+  document.getElementById("loginTab").className =
+    registering ? "btn btn-light" : "btn btn-primary";
+
+  document.getElementById("registerTab").className =
+    registering ? "btn btn-primary" : "btn btn-light";
+
+  document.getElementById("authMessage").textContent =
+    registering
+      ? "Setelah daftar, cek email untuk verifikasi akun."
+      : "Login untuk melanjutkan pesanan.";
+}
+
+function openAuthModal() {
+  if(currentUser) {
+    document.getElementById("logoutButton").style.display = "block";
+    document.getElementById("authForm").style.display = "none";
+    document.getElementById("loginTab").style.display = "none";
+    document.getElementById("registerTab").style.display = "none";
+    document.getElementById("authMessage").textContent = "Kamu sudah login.";
+  } else {
+    document.getElementById("logoutButton").style.display = "none";
+    document.getElementById("authForm").style.display = "grid";
+    document.getElementById("loginTab").style.display = "block";
+    document.getElementById("registerTab").style.display = "block";
+
+    setAuthMode("login");
+  }
+
+  openModal("authModal");
+}
+
+async function submitAuth(event) {
+  event.preventDefault();
+
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+  const fullName = document.getElementById("fullName").value.trim();
+  const submitButton = document.getElementById("authSubmit");
+
+  if(authMode === "register" && !fullName) {
+    showToast("Nama lengkap wajib diisi.");
+    return;
+  }
+
+  submitButton.disabled = true;
+  submitButton.textContent = "Memproses...";
+
+  try {
+    if(authMode === "register") {
+      const {data,error} = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options:{
+          data:{full_name:fullName}
+        }
+      });
+
+      if(error) throw error;
+
+      if(data.session) {
+        showToast("Pendaftaran berhasil. Kamu sudah login.");
+
+        await refreshAuthState();
+
+        closeModal("authModal");
+      } else {
+        showToast("Pendaftaran berhasil. Silakan cek email untuk verifikasi.");
+
+        document.getElementById("authMessage").textContent =
+          "Email verifikasi telah diminta. Buka email kamu, verifikasi akun, lalu login di sini.";
+
+        setAuthMode("login");
+
+        document.getElementById("authEmail").value = email;
+      }
+    } else {
+      const {error} = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if(error) throw error;
+
+      await refreshAuthState();
+
+      closeModal("authModal");
+
+      showToast("Login berhasil.");
+    }
+  } catch(error) {
+    console.error("Kesalahan autentikasi:",error);
+    showToast(authErrorMessage(error));
+  } finally {
+    submitButton.disabled = false;
+
+    submitButton.textContent =
+      authMode === "register" ? "Daftar Sekarang" : "Login";
+  }
+}
+
+function authErrorMessage(error) {
+  const message = String(error.message || "").toLowerCase();
+
+  if(message.includes("invalid login credentials")) {
+    return "Email atau password salah.";
+  }
+
+  if(message.includes("email not confirmed")) {
+    return "Email belum diverifikasi. Periksa kotak masuk email kamu.";
+  }
+
+  if(message.includes("user already registered")) {
+    return "Email sudah terdaftar. Silakan login.";
+  }
+
+  if(message.includes("password")) {
+    return "Password tidak memenuhi ketentuan.";
+  }
+
+  return error.message || "Terjadi kesalahan. Silakan coba lagi.";
+}
+
+async function refreshAuthState() {
+  const { data: { session }, error } =
+    await supabaseClient.auth.getSession();
+
+  if(error) {
+    console.error("Gagal memeriksa sesi:",error.message);
+    currentUser = null;
+  } else {
+    currentUser = session?.user || null;
+  }
+
+  updateAuthUI();
+}
+
+function updateAuthUI() {
+  const authButton = document.getElementById("authButton");
+  const userLabel = document.getElementById("userLabel");
+
+  if(currentUser) {
+    const displayName =
+      currentUser.user_metadata?.full_name ||
+      currentUser.email ||
+      "Pelanggan";
+
+    authButton.textContent = "Akun";
+    userLabel.textContent = displayName;
+  } else {
+    authButton.textContent = "Login / Daftar";
+    userLabel.textContent = "";
+  }
+}
+
+async function logoutCustomer() {
+  const {error} = await supabaseClient.auth.signOut();
+
+  if(error) {
+    showToast("Logout gagal: " + error.message);
+    return;
+  }
+
+  currentUser = null;
+
+  updateAuthUI();
+  closeModal("authModal");
+
+  showToast("Kamu berhasil logout.");
+}
+
+/* CHECKOUT DAN PEMBAYARAN MIDTRANS */
+async function checkoutNotice() {
+  if(!cart.length) {
+    showToast("Keranjang masih kosong.");
+    return;
+  }
+
+  if(!currentUser) {
+    closeModal("cartModal");
+    setAuthMode("login");
+    openAuthModal();
+
+    showToast("Silakan login atau daftar sebelum memesan.");
+    return;
+  }
+
+  await createOrder();
+}
+/* CHECKOUT MIDTRANS — VERSI DIPERBAIKI */
+async function createOrder() {
+  const checkoutButton = document.getElementById("checkoutButton");
+
+  if (!checkoutButton) {
+    showToast("Tombol checkout tidak ditemukan.");
+    return;
+  }
+
+  if (!cart.length) {
+    showToast("Keranjang masih kosong.");
+    return;
+  }
+
+  if (checkoutButton.disabled) return;
+
+  checkoutButton.disabled = true;
+  checkoutButton.textContent = "Memproses pembayaran...";
+
+  try {
+    // 1. Periksa sesi login
+    const {
+      data: userData,
+      error: userError
+    } = await supabaseClient.auth.getUser();
+
+    if (userError || !userData?.user) {
+      currentUser = null;
+      updateAuthUI();
+
+      closeModal("cartModal");
+      setAuthMode("login");
+      openAuthModal();
+
+      throw new Error("Sesi login berakhir. Silakan login kembali.");
+    }
+
+    currentUser = userData.user;
+
+    // 2. Validasi isi keranjang
+    const items = cart.map(item => {
+      if (!item.planId) {
+        throw new Error("ID paket tidak ditemukan. Hapus produk dan tambahkan kembali.");
+      }
+
+      const quantity = Number(item.quantity);
+
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
+        throw new Error("Jumlah produk tidak valid.");
+      }
+
+      return {
+        plan_id: item.planId,
+        quantity
+      };
+    });
+
+    // 3. Kirim permintaan ke Edge Function
+    const {
+      data,
+      error
+    } = await supabaseClient.functions.invoke(
+      "create-midtrans-payment",
+      {
+        body: { items }
+      }
+    );
+
+    // 4. Tangani error server
+    if (error) {
+      let message = error.message || "Server gagal membuat pembayaran.";
+
+      try {
+        const response = error.context;
+
+        if (response && typeof response.clone === "function") {
+          const details = await response.clone().json();
+
+          message =
+            details?.error ||
+            details?.message ||
+            message;
+        }
+      } catch (_) {}
+
+      throw new Error(message);
+    }
+
+    if (!data) {
+      throw new Error("Server tidak memberikan respons.");
+    }
+
+    if (!data.success) {
+      throw new Error(
+        data.error || "Pesanan gagal dibuat."
+      );
+    }
+
+    if (!data.redirect_url) {
+      throw new Error("Link pembayaran tidak tersedia.");
+    }
+
+    // 5. Validasi URL pembayaran
+    let paymentUrl;
+
+    try {
+      paymentUrl = new URL(data.redirect_url);
+    } catch (_) {
+      throw new Error("Link pembayaran tidak valid.");
+    }
+
+    const allowedHosts = [
+      "app.sandbox.midtrans.com",
+      "app.midtrans.com"
+    ];
+
+    if (
+      paymentUrl.protocol !== "https:" ||
+      !allowedHosts.includes(paymentUrl.hostname)
+    ) {
+      throw new Error("Alamat pembayaran tidak aman.");
+    }
+
+    // 6. Kosongkan keranjang setelah pembayaran berhasil dibuat
+    cart = [];
+
+    updateCartCount();
+    renderCart();
+
+    closeModal("cartModal");
+
+    // 7. Arahkan pelanggan ke Midtrans
+    window.location.assign(paymentUrl.href);
+
+  } catch (error) {
+    console.error("Checkout Midtrans gagal:", error);
+
+    showToast(
+      error.message || "Pembayaran gagal dibuat. Silakan coba lagi."
+    );
+
+  } finally {
+    checkoutButton.disabled = false;
+    checkoutButton.textContent = "Lanjutkan Pesanan";
+  }
+}
+
+/* RIWAYAT PESANAN */
+async function openOrderHistory() {
+  if(!currentUser) {
+    showToast("Silakan login untuk melihat riwayat pesanan.");
+    openAuthModal();
+    return;
+  }
+
+  const {data:orders,error} = await supabaseClient
+    .from("orders")
+    .select(`
+      id,
+      order_code,
+      total_amount,
+      payment_status,
+      order_status,
+      created_at,
+      order_items!order_items_order_id_fkey (
+        product_name,
+        plan_name,
+        quantity,
+        unit_price
+      )
+    `)
+    .eq("user_id",currentUser.id)
+    .order("created_at",{ascending:false});
+
+  if(error) {
+    console.error(error);
+    showToast("Gagal memuat riwayat pesanan.");
+    return;
+  }
+
+  const orderStatus = {
+    waiting:"Menunggu",
+    processing:"Diproses",
+    completed:"Selesai",
+    cancelled:"Dibatalkan"
+  };
+
+  const paymentStatus = {
+    pending:"Belum Dibayar",
+    paid:"Sudah Dibayar",
+    failed:"Gagal",
+    expired:"Kedaluwarsa"
+  };
+
+  const historyHTML = (orders || []).map(order => {
+    const date = new Date(order.created_at).toLocaleString("id-ID",{
+      day:"numeric",
+      month:"long",
+      year:"numeric",
+      hour:"2-digit",
+      minute:"2-digit"
+    });
+
+    const itemsHTML = (order.order_items || []).map(item => `
+      <div class="history-product">
+        <div>
+          <strong>${escapeHTML(item.product_name)}</strong>
+          <p>${escapeHTML(item.plan_name)} × ${item.quantity}</p>
+        </div>
+
+        <span>${rupiah(item.unit_price * item.quantity)}</span>
+      </div>
+    `).join("");
+
+    return `
+      <div class="history-card">
+        <div class="history-card-top">
+          <div>
+            <small>KODE PESANAN</small>
+            <h3>${escapeHTML(order.order_code)}</h3>
+          </div>
+
+          <span class="history-status">
+            ${orderStatus[order.order_status] || escapeHTML(order.order_status)}
+          </span>
+        </div>
+
+        <p class="history-date">${date}</p>
+
+        <div class="history-card-bottom">
+          <div>
+            <small>TOTAL PESANAN</small>
+            <strong>${rupiah(order.total_amount)}</strong>
+          </div>
+        </div>
+
+        <details class="history-detail">
+          <summary>Lihat Detail Pesanan</summary>
+
+          <div class="history-products">
+            ${itemsHTML || "<p>Tidak ada rincian produk.</p>"}
+          </div>
+
+          <div class="history-card-bottom">
+            <div>
+              <small>STATUS PEMBAYARAN</small>
+              <strong>
+                ${paymentStatus[order.payment_status] || escapeHTML(order.payment_status)}
+              </strong>
+            </div>
+
+            <div>
+              <small>STATUS PESANAN</small>
+              <strong>
+                ${orderStatus[order.order_status] || escapeHTML(order.order_status)}
+              </strong>
+            </div>
+          </div>
+        </details>
+      </div>
+    `;
+  }).join("");
+
+  const content = document.getElementById("orderHistoryContent");
+
+  if(!content) {
+    showToast("Tempat riwayat pesanan belum tersedia.");
+    return;
+  }
+
+  content.innerHTML = historyHTML || "<p>Belum ada pesanan.</p>";
+
+  openModal("orderHistoryModal");
+}
+
+/* MULAI WEBSITE */
+document.addEventListener("DOMContentLoaded",async () => {
+  renderCart();
+
+  await refreshAuthState();
+  await loadProductsFromSupabase();
+
+  supabaseClient.auth.onAuthStateChange((event,session) => {
+    currentUser = session?.user || null;
+    updateAuthUI();
+  });
+});
+</script>
+
+</body>
+</html>
